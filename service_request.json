@@ -1,0 +1,98 @@
+[
+  {
+    "id": "service-001",
+    "source": "Parent Service Request",
+    "title": "Request enrollment information",
+    "content": "A parent would like information about enrolling a child in the online Tamil school, including available levels, age groups, schedules, tuition, and the registration process.",
+    "category": "Enrollment",
+    "priority": "Normal"
+  },
+  {
+    "id": "service-002",
+    "source": "Parent Service Request",
+    "title": "Request a placement assessment",
+    "content": "A parent would like the school to assess their child's Tamil level before enrollment or before moving to another class. The request should include the student's age and previous Tamil learning experience.",
+    "category": "Academic",
+    "priority": "Normal"
+  },
+  {
+    "id": "service-003",
+    "source": "Parent Service Request",
+    "title": "Request a class schedule change",
+    "content": "A parent would like to move their child to a different class time because of a recurring schedule conflict. The school should check whether a suitable class has space available.",
+    "category": "Scheduling",
+    "priority": "Normal"
+  },
+  {
+    "id": "service-004",
+    "source": "Parent Service Request",
+    "title": "Report an absence",
+    "content": "A parent is notifying the school that their child will miss a class. The request should capture the student's name, class date, reason if the parent chooses to provide one, and whether catch-up materials are needed.",
+    "category": "Attendance",
+    "priority": "Normal"
+  },
+  {
+    "id": "service-005",
+    "source": "Parent Service Request",
+    "title": "Request missed-class materials",
+    "content": "A parent is requesting worksheets, homework, or other learning materials after their child missed a Tamil class. The school should share materials according to the attendance and make-up policy.",
+    "category": "Attendance",
+    "priority": "Normal"
+  },
+  {
+    "id": "service-006",
+    "source": "Parent Service Request",
+    "title": "Report a technical problem",
+    "content": "A parent reports that their child cannot join class or cannot access audio, video, class links, or learning materials. The request should include the device type, class time, and any error message.",
+    "category": "Technical Support",
+    "priority": "High"
+  },
+  {
+    "id": "service-007",
+    "source": "Parent Service Request",
+    "title": "Request a progress update",
+    "content": "A parent would like an update on their child's Tamil learning, including participation, homework, reading, writing, speaking, and recommended next steps.",
+    "category": "Academic",
+    "priority": "Normal"
+  },
+  {
+    "id": "service-008",
+    "source": "Parent Service Request",
+    "title": "Ask about homework or classwork",
+    "content": "A parent needs clarification about a Tamil homework activity, worksheet, due date, or class assignment. The request should identify the student's level and the relevant lesson or material.",
+    "category": "Academic",
+    "priority": "Normal"
+  },
+  {
+    "id": "service-009",
+    "source": "Parent Service Request",
+    "title": "Request a fee receipt or invoice",
+    "content": "A parent needs a tuition receipt, invoice, payment confirmation, or correction to billing information. The request should include the student's name and payment date or reference when available.",
+    "category": "Billing",
+    "priority": "Normal"
+  },
+  {
+    "id": "service-010",
+    "source": "Parent Service Request",
+    "title": "Request withdrawal or refund information",
+    "content": "A parent is considering withdrawing their child from a class and would like to know the process, effective date, and any applicable refund policy. The request should be sent to the school office for review.",
+    "category": "Enrollment",
+    "priority": "High"
+  },
+  {
+    "id": "service-011",
+    "source": "Parent Service Request",
+    "title": "Update parent contact details",
+    "content": "A parent needs to update an email address, phone number, emergency contact, or preferred communication method. The school should verify the parent or guardian before changing student account information.",
+    "category": "Administration",
+    "priority": "Normal"
+  },
+  {
+    "id": "service-012",
+    "source": "Parent Service Request",
+    "title": "Report a classroom concern",
+    "content": "A parent wishes to share a concern about their child's online learning experience, classroom conduct, or interactions with others. The school should acknowledge the request promptly and handle it privately through the appropriate staff member.",
+    "category": "Student Support",
+    "priority": "High"
+  }
+]
