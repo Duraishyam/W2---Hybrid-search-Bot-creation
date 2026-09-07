@@ -16,6 +16,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
+import re
 
 import numpy as np
 from langchain_chroma import Chroma
@@ -33,6 +34,7 @@ TOP_K = 4
 BM25_WEIGHT = 0.4
 SEMANTIC_WEIGHT = 0.6
 RRF_K = 60
+TOKEN_PATTERN = r"[a-z0-9]+"
 
 
 @dataclass
@@ -42,15 +44,49 @@ class HybridRetriever:
     vectorstore: Chroma
     bm25: BM25Retriever
     embeddings: HuggingFaceEmbeddings
+    documents: list[Document]
 
-    def semantic_search(self, query: str, k: int = TOP_K) -> list[tuple[Document, float]]:
+    def semantic_search(
+        self,
+        query: str,
+        k: int = TOP_K,
+        document_types: set[str] | None = None,
+    ) -> list[tuple[Document, float]]:
         """Return documents and Chroma relevance scores for a semantic-only search."""
-        return self.vectorstore.similarity_search_with_relevance_scores(query, k=k)
+        filter_by_type = (
+            {"document_type": {"$in": sorted(document_types)}}
+            if document_types
+            else None
+        )
+        return self.vectorstore.similarity_search_with_relevance_scores(
+            query,
+            k=k,
+            filter=filter_by_type,
+        )
 
-    def retrieve(self, query: str, k: int = TOP_K) -> list[Document]:
+    def retrieve(
+        self,
+        query: str,
+        k: int = TOP_K,
+        document_types: set[str] | None = None,
+    ) -> list[Document]:
         """Return hybrid results merged with weighted Reciprocal Rank Fusion."""
-        semantic_docs = [document for document, _ in self.semantic_search(query, k=k)]
-        keyword_docs = self.bm25.invoke(query)[:k]
+        semantic_docs = [
+            document
+            for document, _ in self.semantic_search(query, k=k, document_types=document_types)
+        ]
+        keyword_documents = (
+            [
+                document
+                for document in self.documents
+                if document.metadata.get("document_type") in document_types
+            ]
+            if document_types
+            else self.documents
+        )
+        keyword_retriever = BM25Retriever.from_documents(keyword_documents)
+        keyword_retriever.k = k
+        keyword_docs = keyword_retriever.invoke(query)[:k]
 
         fused_scores: dict[str, float] = {}
         fused_docs: dict[str, Document] = {}
@@ -67,11 +103,7 @@ class HybridRetriever:
         return [fused_docs[key] for key in ordered_keys[:k]]
 
     def score_query(self, query: str, docs: list[Document]) -> list[tuple[Document, float]]:
-        """Pair each document with cosine similarity to the query.
-
-        RRF values in ``retrieve`` are rank-based. These cosine similarities are
-        a separate, interpretable signal that can be used by a confidence gate.
-        """
+        """Score candidates with semantic similarity and keyword evidence."""
         if not docs:
             return []
 
@@ -86,8 +118,22 @@ class HybridRetriever:
             document_vectors, axis=1, keepdims=True
         ) + 1e-12
 
-        similarities = document_vectors @ query_vector
-        return list(zip(docs, similarities.tolist()))
+        semantic_scores = np.clip(document_vectors @ query_vector, 0.0, 1.0)
+        query_terms = set(re.findall(TOKEN_PATTERN, query.lower()))
+        keyword_scores = []
+        for document in docs:
+            document_terms = set(re.findall(TOKEN_PATTERN, document.page_content.lower()))
+            keyword_scores.append(
+                len(query_terms & document_terms) / len(query_terms)
+                if query_terms
+                else 0.0
+            )
+
+        hybrid_scores = (
+            SEMANTIC_WEIGHT * semantic_scores
+            + BM25_WEIGHT * np.array(keyword_scores, dtype=np.float32)
+        )
+        return list(zip(docs, hybrid_scores.tolist()))
 
     @staticmethod
     def _document_key(document: Document) -> str:
@@ -119,7 +165,8 @@ def build_retriever() -> HybridRetriever:
 
     embeddings = HuggingFaceEmbeddings(
         model_name=EMBEDDING_MODEL,
-        model_kwargs={"device": "cpu"},
+        # The model was downloaded during ingestion; avoid network checks at runtime.
+        model_kwargs={"device": "cpu", "local_files_only": True},
         encode_kwargs={"normalize_embeddings": True},
     )
     vectorstore = Chroma(
@@ -137,6 +184,7 @@ def build_retriever() -> HybridRetriever:
         vectorstore=vectorstore,
         bm25=bm25,
         embeddings=embeddings,
+        documents=documents,
     )
 
 
