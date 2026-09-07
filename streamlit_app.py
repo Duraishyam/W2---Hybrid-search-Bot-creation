@@ -11,11 +11,12 @@ from __future__ import annotations
 
 import streamlit as st
 
+from bot_logic import run_bot
 from retriever import HybridRetriever, build_retriever
 
 
 APP_TITLE = "APS Online Tamil School Assistant"
-CONFIDENCE_THRESHOLD = 0.35
+CONFIDENCE_THRESHOLD = 0.55
 
 
 @st.cache_resource(show_spinner="Loading the school knowledge base...")
@@ -32,21 +33,15 @@ def clean_content(document_content: str, title: str) -> str:
 
 def respond(question: str, retriever: HybridRetriever) -> tuple[str, str, list[tuple]]:
     """Retrieve, grade, and either answer or flag the question for staff."""
-    documents = retriever.retrieve(question)
-    scored_documents = retriever.score_query(question, documents)
-    best_document, best_score = max(scored_documents, key=lambda item: item[1], default=(None, 0.0))
+    result = run_bot(retriever, question)
+    scored_documents = result.get("scored", [])
+    if result.get("decision") != "answer":
+        return result["answer"], "Escalation needed", scored_documents
 
-    if best_document is None or best_score < CONFIDENCE_THRESHOLD:
-        return (
-            "I do not have enough reliable school information to answer that. "
-            "This question needs help from a school administrator.",
-            "Escalation needed",
-            scored_documents,
-        )
-
-    title = best_document.metadata.get("title", "School information")
-    source = best_document.metadata.get("source", "School knowledge base")
-    answer = clean_content(best_document.page_content, title)
+    answer_document = scored_documents[0][0]
+    title = answer_document.metadata.get("title", "School information")
+    source = answer_document.metadata.get("source", "School knowledge base")
+    answer = clean_content(answer_document.page_content, title)
     return f"{answer}\n\n_Source: {source}_", "Answered", scored_documents
 
 
